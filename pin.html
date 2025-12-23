@@ -47,6 +47,46 @@
 <div id="status"></div>
 
 <script>
+  // Read URL parameters (?action=checkout&id=...&sheet=...)
+  function getParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      action: params.get("action"),
+      id: params.get("id"),
+      sheet: params.get("sheet")
+    };
+  }
+
+  const elements = {
+    toolInfo: document.getElementById("tool-info"),
+    pinInput: document.getElementById("pin"),
+    submitBtn: document.getElementById("submitBtn"),
+    message: document.getElementById("message")
+  };
+
+  const state = getParams();
+
+  // Show basic info about what this QR is for
+  function renderInitialInfo() {
+    if (!state.id || !state.sheet || !state.action) {
+      elements.toolInfo.textContent = "Invalid QR code. Missing parameters.";
+      elements.submitBtn.disabled = true;
+      return;
+    }
+
+    const actionLabel =
+      state.action === "checkout" ? "Check OUT" :
+      state.action === "checkin" ? "Check IN" :
+      state.action;
+
+    elements.toolInfo.textContent =
+      `${actionLabel} for ${state.sheet} item: ${state.id}`;
+  }
+
+  renderInitialInfo();
+</script>
+
+
   // Extract URL parameters (id, sheet, action)
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("id");
