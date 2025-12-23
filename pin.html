@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tool Checkout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: red;
+      font-size: 32px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 20px;
+      margin-top: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 20px;
+      font-size: 22px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+    #status {
+      margin-top: 30px;
+      font-size: 22px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>ENTER PIN</h1>
+
+<input id="pin" type="number" placeholder="Employee PIN">
+<button onclick="submitPIN()">Submit</button>
+
+<div id="status"></div>
+
+<script>
+  // Extract URL parameters (id, sheet, action)
+  const params = new URLSearchParams(window.location.search);
+  const toolId = params.get("id");
+  const sheet = params.get("sheet");
+  const action = params.get("action");
+
+  async function submitPIN() {
+    const pin = document.getElementById("pin").value;
+    if (!pin) {
+      document.getElementById("status").innerText = "Enter your PIN";
+      return;
+    }
+
+    document.getElementById("status").innerText = "Processing...";
+
+    // Call your Apps Script backend
+    const url =
+      "https://script.google.com/macros/s/AKfycbyA9sjZOq4Pcwc0Bf5Fn8AD86gHOR0I7O2PPpDGeIx97_yd5qeY__3SfQqbWJcXOX1f1A/exec" +
+      `?action=${encodeURIComponent(action)}&id=${encodeURIComponent(toolId)}&sheet=${encodeURIComponent(sheet)}&pin=${encodeURIComponent(pin)}`;
+
+    try {
+      const response = await fetch(url);
+      const text = await response.text();
+      document.getElementById("status").innerText = text;
+    } catch (e) {
+      document.getElementById("status").innerText = "Network error";
+    }
+  }
+</script>
+
+</body>
+</html>
+
