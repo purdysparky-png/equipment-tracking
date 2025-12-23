@@ -47,6 +47,9 @@
 <div id="status"></div>
 
 <script>
+  // TODO: Replace this with your actual Apps Script Web App URL
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxCiFFzbtfnTN0Ms-YtVLKKxij3PBEOnXu0kyAW78dqb9SpDHkH2I3MxN3wxVsiJjMr/exec";
+
   // Read URL parameters (?action=checkout&id=...&sheet=...)
   function getParams() {
     const params = new URLSearchParams(window.location.search);
@@ -83,39 +86,65 @@
       `${actionLabel} for ${state.sheet} item: ${state.id}`;
   }
 
-  renderInitialInfo();
-</script>
+  async function submitPin() {
+    const pin = elements.pinInput.value.trim();
 
-
-  // Extract URL parameters (id, sheet, action)
-  const params = new URLSearchParams(window.location.search);
-  const toolId = params.get("id");
-  const sheet = params.get("sheet");
-  const action = params.get("action");
-
-  async function submitPIN() {
-    const pin = document.getElementById("pin").value;
     if (!pin) {
-      document.getElementById("status").innerText = "Enter your PIN";
+      elements.message.textContent = "Please enter your PIN.";
       return;
     }
 
-    document.getElementById("status").innerText = "Processing...";
-
-    // Call your Apps Script backend
-    const url =
-      "https://script.google.com/macros/s/AKfycbyA9sjZOq4Pcwc0Bf5Fn8AD86gHOR0I7O2PPpDGeIx97_yd5qeY__3SfQqbWJcXOX1f1A/exec" +
-      `?action=${encodeURIComponent(action)}&id=${encodeURIComponent(toolId)}&sheet=${encodeURIComponent(sheet)}&pin=${encodeURIComponent(pin)}`;
+    elements.submitBtn.disabled = true;
+    elements.message.textContent = "Processing...";
 
     try {
-      const response = await fetch(url);
-      const text = await response.text();
-      document.getElementById("status").innerText = text;
-    } catch (e) {
-      document.getElementById("status").innerText = "Network error";
+      const payload = {
+        pin: pin,
+        action: state.action,
+        id: state.id,
+        sheet: state.sheet
+      };
+
+      const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        elements.message.textContent = data.message || "Invalid PIN.";
+        elements.submitBtn.disabled = false;
+        return;
+      }
+
+      const verb = state.action === "checkout" ? "checked out to" : "returned by";
+      elements.message.textContent =
+        `${state.sheet} item ${state.id} ${verb} ${data.name} (${data.warehouse}).`;
+
+      elements.pinInput.value = "";
+      elements.submitBtn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      elements.message.textContent = "Error contacting server.";
+      elements.submitBtn.disabled = false;
     }
   }
+
+  elements.submitBtn.addEventListener("click", submitPin);
+  elements.pinInput.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      submitPin();
+    }
+  });
+
+  renderInitialInfo();
 </script>
+
 
 </body>
 </html>
