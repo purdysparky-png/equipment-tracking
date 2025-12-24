@@ -3,6 +3,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tool Checkout</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,12 +14,20 @@
       color: red;
       font-size: 32px;
       text-align: center;
+      margin-bottom: 10px;
+    }
+    #tool-info {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 20px;
     }
     input {
       width: 100%;
       padding: 14px;
       font-size: 20px;
-      margin-top: 20px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
       width: 100%;
@@ -30,123 +39,120 @@
       border: none;
       border-radius: 6px;
     }
-    #status {
-      margin-top: 30px;
-      font-size: 22px;
+    #message {
+      margin-top: 25px;
+      font-size: 20px;
       text-align: center;
+      min-height: 40px;
     }
   </style>
 </head>
+
 <body>
 
 <h1>ENTER PIN</h1>
 
-<!-- TOOL INFO (added) -->
-<div id="tool-info" style="margin-top:20px; font-size:20px; text-align:center;"></div>
+<div id="tool-info"></div>
 
-<!-- PIN INPUT -->
 <input id="pin" type="number" placeholder="Employee PIN">
 
-<!-- SUBMIT BUTTON (fixed) -->
 <button id="submitBtn">Submit</button>
 
-<!-- MESSAGE AREA (added) -->
-<div id="message" style="margin-top:20px; font-size:20px; text-align:center;"></div>
+<div id="message"></div>
 
 <script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_urnkLc8lm68Qn3D42J1MPaKlrayabqM-WQw0SDVjvKArXsn9Yv8095snyxWkP6IV/exec";
+  // IMPORTANT: This must match your latest Web App deployment
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbym4w3OLY2bitvbQW8DznHJ3c0Pxpd4R8fz_KKXqpGoL1RQ5Mc-CB1_U4qbUtizZkXJ/exec";
 
-    function getParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        action: params.get("action"),
-        id: params.get("id"),
-        sheet: params.get("sheet")
-      };
-    }
-
-    const elements = {
-      toolInfo: document.getElementById("tool-info"),
-      pinInput: document.getElementById("pin"),
-      submitBtn: document.getElementById("submitBtn"),
-      message: document.getElementById("message")
+  function getParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      action: params.get("action"),
+      id: params.get("id"),
+      sheet: params.get("sheet")
     };
+  }
 
-    const state = getParams();
+  const elements = {
+    toolInfo: document.getElementById("tool-info"),
+    pinInput: document.getElementById("pin"),
+    submitBtn: document.getElementById("submitBtn"),
+    message: document.getElementById("message")
+  };
 
-    function renderInitialInfo() {
-      if (!state.id || !state.sheet || !state.action) {
-        elements.toolInfo.textContent = "Invalid QR code. Missing parameters.";
-        elements.submitBtn.disabled = true;
-        return;
-      }
+  const state = getParams();
 
-      const actionLabel =
-        state.action === "checkout" ? "Check OUT" :
-        state.action === "checkin" ? "Check IN" :
-        state.action;
-
-      elements.toolInfo.textContent =
-        `${actionLabel} for ${state.sheet} item: ${state.id}`;
-    }
-
-    async function submitPin() {
-      const pin = elements.pinInput.value.trim();
-
-      if (!pin) {
-        elements.message.textContent = "Please enter your PIN.";
-        return;
-      }
-
+  function renderInitialInfo() {
+    if (!state.id || !state.sheet || !state.action) {
+      elements.toolInfo.textContent = "Invalid QR code. Missing parameters.";
       elements.submitBtn.disabled = true;
-      elements.message.textContent = "Processing...";
-
-      try {
-        const payload = {
-          pin: pin,
-          action: state.action,
-          id: state.id,
-          sheet: state.sheet
-        };
-
-        const response = await fetch(WEB_APP_URL, {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-          elements.message.textContent = data.message || "Invalid PIN.";
-          elements.submitBtn.disabled = false;
-          return;
-        }
-
-        const verb = state.action === "checkout" ? "checked out to" : "returned by";
-        elements.message.textContent =
-          `${state.sheet} item ${state.id} ${verb} ${data.name} (${data.warehouse}).`;
-
-        elements.pinInput.value = "";
-        elements.submitBtn.disabled = false;
-      } catch (err) {
-        console.error(err);
-        elements.message.textContent = "Error contacting server.";
-        elements.submitBtn.disabled = false;
-      }
+      return;
     }
 
-    elements.submitBtn.addEventListener("click", submitPin);
-    elements.pinInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        submitPin();
-      }
-    });
+    const actionLabel =
+      state.action === "checkout" ? "Check OUT" :
+      state.action === "checkin" ? "Check IN" :
+      state.action;
 
-    renderInitialInfo();
+    elements.toolInfo.textContent =
+      `${actionLabel} for ${state.sheet} item: ${state.id}`;
+  }
+
+  async function submitPin() {
+    const pin = elements.pinInput.value.trim();
+
+    if (!pin) {
+      elements.message.textContent = "Please enter your PIN.";
+      return;
+    }
+
+    elements.submitBtn.disabled = true;
+    elements.message.textContent = "Processing...";
+
+    try {
+      const payload = {
+        pin: pin,
+        action: state.action,
+        id: state.id,
+        sheet: state.sheet
+      };
+
+      const response = await fetch(WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      // If Google returns HTML (error), this will throw
+      const data = await response.json();
+
+      if (!data.success) {
+        elements.message.textContent = data.message || "Invalid PIN.";
+        elements.submitBtn.disabled = false;
+        return;
+      }
+
+      const verb = state.action === "checkout" ? "checked out to" : "returned by";
+
+      elements.message.textContent =
+        `${state.sheet} item ${state.id} ${verb} ${data.name} (${data.warehouse}).`;
+
+      elements.pinInput.value = "";
+      elements.submitBtn.disabled = false;
+
+    } catch (err) {
+      console.error("Server error:", err);
+      elements.message.textContent = "Error contacting server.";
+      elements.submitBtn.disabled = false;
+    }
+  }
+
+  elements.submitBtn.addEventListener("click", submitPin);
+  elements.pinInput.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") submitPin();
+  });
+
+  renderInitialInfo();
 </script>
 
 </body>
