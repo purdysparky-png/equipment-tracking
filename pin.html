@@ -90,7 +90,8 @@
   };
 
   const state = getParams();
-
+console.log("DEBUG PARAMS:", state);
+alert("DEBUG:\n" + JSON.stringify(state, null, 2));
   function renderInitialInfo() {
     if (!state.id || !state.sheet || !state.action) {
       elements.toolInfo.textContent = "Invalid QR code. Missing parameters.";
