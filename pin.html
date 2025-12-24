@@ -16,6 +16,12 @@
       text-align: center;
       margin-bottom: 10px;
     }
+    #version {
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 20px;
+    }
     #tool-info {
       font-size: 20px;
       text-align: center;
@@ -51,6 +57,9 @@
 <body>
 
 <h1>ENTER PIN</h1>
+
+<!-- VERSION STAMP -->
+<div id="version">Version 999</div>
 
 <div id="tool-info"></div>
 
@@ -123,7 +132,6 @@
         body: JSON.stringify(payload)
       });
 
-      // If Google returns HTML (error), this will throw
       const data = await response.json();
 
       if (!data.success) {
@@ -157,4 +165,3 @@
 
 </body>
 </html>
-
